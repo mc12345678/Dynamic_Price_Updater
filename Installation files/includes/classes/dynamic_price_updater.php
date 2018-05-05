@@ -507,7 +507,7 @@ class DPU extends base {
     $products_price = $product->fields['products_price'];
     $qty = (float)$_POST['cart_quantity'];*/
     $out = array();
-//    $global_total;
+    $global_total = 0;
     //$products = array(); // Unnecessary define
     $products = $this->shoppingCart->get_products();
     for ($i=0, $n=count($products); $i<$n; $i++) 
@@ -530,7 +530,7 @@ class DPU extends base {
       if (is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
 //    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
         foreach ($this->shoppingCart->contents[$products[$i]['id']]['attributes'] as $option => $value) {
-          $adjust_downloads ++;
+          // $adjust_downloads ++; // not used? mc12345678 18-05-05
 
           $attribute_price = $db->Execute("SELECT *
                                     FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
