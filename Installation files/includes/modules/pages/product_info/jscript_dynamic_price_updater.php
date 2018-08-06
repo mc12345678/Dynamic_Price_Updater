@@ -12,11 +12,40 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
   $pid = (!empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0);
   if (0 == $pid) {
     $load = false;
-  } elseif (zen_get_products_price_is_call($pid) || zen_get_products_price_is_free($pid) || STORE_STATUS > 0) {
+  } elseif (zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid) && empty($optionIds)) || STORE_STATUS > 0) {
     $load = false;
+  } else {
+    if (!class_exists('DPU')) {
+      if (is_file(DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php')) {
+        require DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php';
+      } else {
+        $load = false;
+      }
+    }
+
+    if (class_exists('DPU')) {
+      $dpu = new DPU();
+    }
+
+    $optionIds = array();
+    
+    // Check to see if there are any price affecting conditions associated with the overall operation.
+    // As part of the check assign the option name ids to $optionIds that affect price to be used later.
+
+    // These values are not loaded in the process until after html_header.php which was what loaded this file.
+    $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
+    $products_quantity_order_max = zen_products_lookup($pid, 'products_quantity_order_max');
+
+    if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status == 0 || $products_quantity_order_max == 1)) {
+    // Checks for attributes that affect price including if text boxes.  If there are none that affect price and the quantity
+    //   box is not shown, then go ahead and disable DPU as there is nothing available to adjust/modify price.
+      $load = false;
+    }
   }
-  $pidp = zen_get_products_display_price($pid);
-  if (empty($pidp)) {
+  if (!empty($pid)) {
+    $pidp = zen_get_products_display_price($pid);
+  }
+  if (empty($pidp) && empty($optionIds)) {
     $load = false;
   }
 
@@ -540,6 +569,7 @@ objXHR.prototype.showErrors = function () {
 var xhr = new objXHR;
 
 function init() {
+  var selectName;
   var n=document.forms.length;
   var i;
   for (i = 0; i < n; i += 1) {
@@ -551,35 +581,62 @@ function init() {
 
   n=theForm.elements.length;
   for (i = 0; i < n; i += 1) {
+    // @todo: Here would be an area to potentially identify attribute related items to skip either combining PHP from top
+    //   or some sort of script detect of the presented html.
     switch (theForm.elements[i].type) {
       case "select":
       case "select-one":
-        theForm.elements[i].addEventListener("change", function () {
-          xhr.getPrice();
-        });
+        <?php if (!empty($optionIds)) {?>
+        selectName = theForm.elements[i].getAttribute('name');
+
+        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
+          theForm.elements[i].addEventListener("change", function () {
+            xhr.getPrice();
+          });
+        }
+        <?php } ?>
         break;
       case "textarea":
       case "text":
-        theForm.elements[i].addEventListener("input", function () {
-          xhr.getPrice();
-        });
+            selectName = theForm.elements[i].getAttribute('name');
+
+        if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].includes(selectName) || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
+          theForm.elements[i].addEventListener("input", function () {
+            xhr.getPrice();
+          });
+        }
         break;
       case "checkbox":
       case "radio":
-        theForm.elements[i].addEventListener("click", function () {
-          xhr.getPrice();
-        });
+        <?php if (!empty($optionIds)) {?>
+        if (theForm.elements[i].type == "radio") {
+          selectName = theForm.elements[i].getAttribute('name');
+        } else if (theForm.elements[i].type == "checkbox") {
+          selectName = theForm.elements[i].getAttribute('name');
+          selectName = selectName.substring(0, selectName.indexOf("]") + 1);
+        }
+
+        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
+          theForm.elements[i].addEventListener("click", function () {
+            xhr.getPrice();
+          });
+        }
+        <?php } ?>
         break;
       case "number":
-        theForm.elements[i].addEventListener("change", function () {
-          xhr.getPrice();
-        });
-        theForm.elements[i].addEventListener("keyup", function () {
-          xhr.getPrice();
-        });
-        theForm.elements[i].addEventListener("input", function () {
-          xhr.getPrice();
-        });
+        <?php if (!empty($optionIds)) {?>
+        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
+          theForm.elements[i].addEventListener("change", function () {
+            xhr.getPrice();
+          });
+          theForm.elements[i].addEventListener("keyup", function () {
+            xhr.getPrice();
+          });
+          theForm.elements[i].addEventListener("input", function () {
+            xhr.getPrice();
+          });
+        }
+        <?php } ?>
         break;
     }
   }
