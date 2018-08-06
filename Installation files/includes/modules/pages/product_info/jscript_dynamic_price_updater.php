@@ -14,6 +14,12 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     $load = false;
   } elseif (zen_get_products_price_is_call($pid) || zen_get_products_price_is_free($pid) || STORE_STATUS > 0) {
     $load = false;
+  } elseif (!zen_has_product_attributes_values($pid) && ($products_qty_box_status == 0 || $products_quantity_order_max == 1)) {
+    // Should check here also if text boxes are assigned and if so then if they can affect price.  If there are none
+    //   or if they can not affect price, then go ahead and disable DPU as there is nothing available to adjust/modify price.
+    if (true) { // This is the no text options or those that are present do not affect price.
+      $load = false;
+    }
   }
   $pidp = zen_get_products_display_price($pid);
   if (empty($pidp)) {
@@ -551,6 +557,8 @@ function init() {
 
   n=theForm.elements.length;
   for (i = 0; i < n; i += 1) {
+    // @todo: Here would be an area to potentially identify attribute related items to skip either combining PHP from top
+    //   or some sort of script detect of the presented html.
     switch (theForm.elements[i].type) {
       case "select":
       case "select-one":
