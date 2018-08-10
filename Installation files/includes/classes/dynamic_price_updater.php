@@ -543,7 +543,23 @@ class DPU extends base {
             )
           ) {
 
-        $options_id[$attribute_price->fields['options_id']] = 'id[' . $attribute_price->fields['options_id'] . ']';
+        $prefix_format = 'id[:option_id:]';
+        
+        $attribute_type = zen_get_attributes_type($attribute_price->fields['products_attributes_id']);
+        
+        switch ($attribute_type) {
+          case (PRODUCTS_OPTIONS_TYPE_TEXT):
+            $prefix_format = $GLOBALS['db']->bindVars($prefix_format, ':option_id:', TEXT_PREFIX . ':option_id:', 'noquotestring');
+            break;
+          case (PRODUCTS_OPTIONS_TYPE_FILE):
+            $prefix_format = $GLOBALS['db']->bindVars($prefix_format, ':option_id:', TEXT_PREFIX . ':option_id:', 'noquotestring');
+            break;
+          default:
+            $GLOBALS['zco_notifier']->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_ATTRIBUTE_ID_TEXT', $attribute_price->fields, $prefix_format, $options_id, $last_id); 
+        }
+        
+        $result = $GLOBALS['db']->bindVars($prefix_format, ':option_id:', $attribute_price->fields['options_id'], 'integer');
+        $options_id[$attribute_price->fields['options_id']] = $result;
         $last_id = $attribute_price->fields['options_id'];
 
         $attribute_price->MoveNext();
