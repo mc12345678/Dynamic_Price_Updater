@@ -584,29 +584,25 @@ function init() {
     switch (theForm.elements[i].type) {
       case "select":
       case "select-one":
-        selectName = theForm.elements[i].getAttribute('name');
         <?php if (!empty($optionIds)) {?>
+        selectName = theForm.elements[i].getAttribute('name');
+
         if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
-        <?php } ?>
           theForm.elements[i].addEventListener("change", function () {
             xhr.getPrice();
           });
-        <?php if (!empty($optionIds)) {?>
         }
         <?php } ?>
         break;
       case "textarea":
       case "text":
-        selectName = theForm.elements[i].getAttribute('name');
-        <?php if (!empty($optionIds)) {?>
-        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName) || selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
-        <?php } ?>
+            selectName = theForm.elements[i].getAttribute('name');
+
+        if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].includes(selectName) || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
           theForm.elements[i].addEventListener("input", function () {
             xhr.getPrice();
           });
-        <?php if (!empty($optionIds)) {?>
         }
-        <?php } ?>
         break;
       case "checkbox":
       case "radio":
@@ -619,18 +615,15 @@ function init() {
         }
 
         if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
-        <?php } ?>
           theForm.elements[i].addEventListener("click", function () {
             xhr.getPrice();
           });
-        <?php if (!empty($optionIds)) {?>
         }
         <?php } ?>
         break;
       case "number":
         <?php if (!empty($optionIds)) {?>
         if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
-        <?php } ?>
           theForm.elements[i].addEventListener("change", function () {
             xhr.getPrice();
           });
@@ -640,7 +633,6 @@ function init() {
           theForm.elements[i].addEventListener("input", function () {
             xhr.getPrice();
           });
-        <?php if (!empty($optionIds)) {?>
         }
         <?php } ?>
         break;
