@@ -31,6 +31,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     
     // Check to see if there are any price affecting conditions associated with the overall operation.
     // As part of the check assign the option name ids to $optionIds that affect price to be used later.
+
+    // These values are not loaded in the process until after html_header.php which was what loaded this file.
+    $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
+    $products_quantity_order_max = zen_products_lookup($pid, 'products_quantity_order_max');
+
     if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status == 0 || $products_quantity_order_max == 1)) {
     // Checks for attributes that affect price incluing if text boxes.  If there are none that affect price and the quantity
     //   box is not shown, then go ahead and disable DPU as there is nothing available to adjust/modify price.
