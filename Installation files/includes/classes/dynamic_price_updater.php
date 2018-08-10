@@ -489,6 +489,74 @@ class DPU extends base {
   }
 
   /*
+   * Identifies the option name id(s) that affect price.
+   *
+   */
+  public function getOptionPricedIds($products_id) {
+
+    // Identify the attribute information associated with the provided $products_id.
+    $attribute_price_query = "SELECT *
+                                FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
+                                WHERE products_id = " . (int)$products_id . "
+                                ORDER BY options_id, options_values_price;
+
+    $attribute_price = $GLOBALS['db']->Execute($attribute_price_query);
+    
+    $last_id = 'X';
+    $options_id = array();
+    
+    // Populate $options_id to contain the options_ids that potentially affect price.
+    while (!attribute_price->EOF) {
+      // Basically if the options_id has already been captured, then don't try to process again.
+      if ($last_id == $attribute_price->fields['options_id']) {
+        $attributes_price->MoveNext();
+        continue;
+      }
+      
+      /* Capture the options_id of option names that could affect price
+      
+      Identify an option name that could affect price by:
+          having a price that is not zero,
+          having quantity prices (though this is not (yet) deconstruct the prices and existing quantity),
+          having a price factor that could affect the price,
+          is a text field that has a word or letter price.
+      */
+      if (!(
+            $attributes_price->fields['options_values_price'] == 0 && 
+            zen_not_null($attributes_price->fields['attributes_qty_prices']) &&
+            zen_not_null($attributes_price->fields['attributes_qty_prices_onetime']) &&
+            $attributes_price->fields['attributes_price_onetime'] == 0 &&
+            (
+              $attributes_price->fields['attributes_price_factor'] ==
+              $attributes_price->fields['attributes_price_factor_offset'] 
+            ) &&
+            (
+              $attributes_price->fields['attributes_price_factor_onetime'] ==
+              $attributes_price->fields['attributes_price_factor_onetime_offset']
+            )
+           ) 
+            ||
+            (
+              zen_get_attributes_type($attribute_price->fields['products_attributes_id']) == PRODUCTS_OPTIONS_TYPE_TEXT &&
+              !($attribute_price->fields['attributes_price_words'] == 0 &&
+              $attribute_price->fields['attributes_price_letters'] == 0)
+            )
+          ) {
+
+        $options_id[$attributes_price->fields['options_id']] = $attributes_price->fields['options_id'];
+        $last_id = $attributes_price->fields['options_id'];
+
+        $attributes_price->MoveNext();
+        continue;
+      }
+      
+      $attributes_price->MoveNext();
+    }
+    
+    return $options_id;
+  }
+  
+  /*
    * Prepares the output for the Updater's sidebox display
    *
    */
