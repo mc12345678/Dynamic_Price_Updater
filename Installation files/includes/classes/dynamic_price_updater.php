@@ -543,7 +543,7 @@ class DPU extends base {
             )
           ) {
 
-        $options_id[$attributes_price->fields['options_id']] = $attributes_price->fields['options_id'];
+        $options_id[$attributes_price->fields['options_id']] = 'id[' . $attributes_price->fields['options_id'] . ']';
         $last_id = $attributes_price->fields['options_id'];
 
         $attributes_price->MoveNext();
