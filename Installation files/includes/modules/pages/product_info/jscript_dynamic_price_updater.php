@@ -16,7 +16,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     $load = false;
   } else {
     if (!class_exists('DPU')) {
-      if (file_exists(DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php') {
+      if (file_exists(DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php')) {
         require DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php';
       } else {
         $load = false;
@@ -603,8 +603,8 @@ function init() {
         }
         <?php } ?>
         break;
-      case "radio":
       case "checkbox":
+      case "radio":
         <?php if (!empty($optionIds)) {?>
         if (theForm.elements[i].type == "radio") {
           selectName = theForm.elements[i].getAttribute('name');

@@ -498,7 +498,7 @@ class DPU extends base {
     $attribute_price_query = "SELECT *
                                 FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
                                 WHERE products_id = " . (int)$products_id . "
-                                ORDER BY options_id, options_values_price;
+                                ORDER BY options_id, options_values_price";
 
     $attribute_price = $GLOBALS['db']->Execute($attribute_price_query);
     
@@ -506,10 +506,10 @@ class DPU extends base {
     $options_id = array();
     
     // Populate $options_id to contain the options_ids that potentially affect price.
-    while (!attribute_price->EOF) {
+    while (!$attribute_price->EOF) {
       // Basically if the options_id has already been captured, then don't try to process again.
       if ($last_id == $attribute_price->fields['options_id']) {
-        $attributes_price->MoveNext();
+        $attribute_price->MoveNext();
         continue;
       }
       
@@ -522,17 +522,17 @@ class DPU extends base {
           is a text field that has a word or letter price.
       */
       if (!(
-            $attributes_price->fields['options_values_price'] == 0 && 
-            zen_not_null($attributes_price->fields['attributes_qty_prices']) &&
-            zen_not_null($attributes_price->fields['attributes_qty_prices_onetime']) &&
-            $attributes_price->fields['attributes_price_onetime'] == 0 &&
+            $attribute_price->fields['options_values_price'] == 0 && 
+            zen_not_null($attribute_price->fields['attributes_qty_prices']) &&
+            zen_not_null($attribute_price->fields['attributes_qty_prices_onetime']) &&
+            $attribute_price->fields['attributes_price_onetime'] == 0 &&
             (
-              $attributes_price->fields['attributes_price_factor'] ==
-              $attributes_price->fields['attributes_price_factor_offset'] 
+              $attribute_price->fields['attributes_price_factor'] ==
+              $attribute_price->fields['attributes_price_factor_offset'] 
             ) &&
             (
-              $attributes_price->fields['attributes_price_factor_onetime'] ==
-              $attributes_price->fields['attributes_price_factor_onetime_offset']
+              $attribute_price->fields['attributes_price_factor_onetime'] ==
+              $attribute_price->fields['attributes_price_factor_onetime_offset']
             )
            ) 
             ||
@@ -543,14 +543,14 @@ class DPU extends base {
             )
           ) {
 
-        $options_id[$attributes_price->fields['options_id']] = 'id[' . $attributes_price->fields['options_id'] . ']';
-        $last_id = $attributes_price->fields['options_id'];
+        $options_id[$attribute_price->fields['options_id']] = 'id[' . $attribute_price->fields['options_id'] . ']';
+        $last_id = $attribute_price->fields['options_id'];
 
-        $attributes_price->MoveNext();
+        $attribute_price->MoveNext();
         continue;
       }
       
-      $attributes_price->MoveNext();
+      $attribute_price->MoveNext();
     }
     
     return $options_id;
