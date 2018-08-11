@@ -523,8 +523,8 @@ class DPU extends base {
       */
       if (!(
             $attribute_price->fields['options_values_price'] == 0 && 
-            zen_not_null($attribute_price->fields['attributes_qty_prices']) &&
-            zen_not_null($attribute_price->fields['attributes_qty_prices_onetime']) &&
+            !zen_not_null($attribute_price->fields['attributes_qty_prices']) &&
+            !zen_not_null($attribute_price->fields['attributes_qty_prices_onetime']) &&
             $attribute_price->fields['attributes_price_onetime'] == 0 &&
             (
               $attribute_price->fields['attributes_price_factor'] ==
