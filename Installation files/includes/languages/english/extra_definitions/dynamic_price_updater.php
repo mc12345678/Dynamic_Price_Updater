@@ -24,3 +24,7 @@ define('DPU_SIDEBOX_FRAME', '<span class="DPUSideBoxName">%1$s</span>%3$s%2$s<br
  * %3$s - The individual price display
  * You can position these anywhere around the DPU_SIDEBOX_FRAME string or even remove them to prevent them from displaying
  */
+define('DPU_OUT_OF_STOCK_IMAGE', 'Out-of-stock %s');
+define('DPU_TEXT_PRODUCT_QUANTITY', ' %1$s in Stock');
+define('DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE', 'Units');
+define('DPU_TEXT_PRODUCT_QUANTITY_SINGLE', 'Unit');

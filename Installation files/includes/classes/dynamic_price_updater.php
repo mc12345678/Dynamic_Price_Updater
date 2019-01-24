@@ -166,48 +166,54 @@ class DPU extends base {
       $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
     }
 
+    if (!defined('DPU_OUT_OF_STOCK_IMAGE')) {
+      define('DPU_OUT_OF_STOCK_IMAGE', '%s');
+    }
+
+    $out_of_stock_image = '';
+    $out_of_stock = false;
+    if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
+      $out_of_stock = true;
+    }
+
+    $this->responseText['stock_quantity'] = $this->product_stock . sprintf(DPU_TEXT_PRODUCT_QUANTITY, (abs($this->product_stock) == 1 ? DPU_TEXT_PRODUCT_QUANTITY_SINGLE: DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE));
+
     switch (true) {
       case ($this->product_stock > 0): // No consideration made yet on allowing quantity to go less than 0.
-        $this->responseText['stock_quantity'] = $this->product_stock;
+//        $this->responseText['stock_quantity'] = $this->product_stock;
         break;
-      case (true):
+      case (false):
         $out_of_stock = false;
         if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
           $out_of_stock = true;
         }
       case ($out_of_stock && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
         // No selections made yet, stock is 0 or less and not allowed to checkout.
-        $this->responseText['stock_quantity'] = $this->product_stock;
-        if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
-          $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
-          $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
-          $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
-        }
+        $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
         break;
-      case ($out_of_stock && $this->num_options > $this->unused && !empty($this->unused)):
+      case ($out_of_stock && ($this->num_options > $this->unused) && !empty($this->unused)):
         // Not all selections have been made, stock is 0 or less and not allowed to checkout.
-        $this->responseText['stock_quantity'] = $this->product_stock;
-        if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
-          $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
-          $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
-          $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
-        }
+        $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
         break;
       default:
         // Selections are complete and stock is 0 or less.
-        $this->responseText['stock_quantity'] = $this->product_stock;
+        $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
         break;
     }
+
+    if ($out_of_stock) {
+      if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
+        $this->responseText['stock_quantity'] = $out_of_stock_image;
+      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+        $this->responseText['stock_quantity'] .= '&nbsp;' . $out_of_stock_image;
+      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+        $this->responseText['stock_quantity'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
+      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+        $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];;
+        $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];;
+      }
+    }
+
     
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
