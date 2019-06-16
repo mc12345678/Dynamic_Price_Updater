@@ -40,6 +40,12 @@ class DPU extends base {
   protected $new_attributes = array();
 
   /*
+   * Array of temporary attributes.
+   * @var array
+   */
+  protected $new_temp_attributes = array();
+
+  /*
    * Constructor
    *
    * @param obj The Zen Cart database class
@@ -95,11 +101,11 @@ class DPU extends base {
 
     switch (true) {
         //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
-        case ($this->attributeDisplayStartAtPrices() && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+        case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes) && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options) && isset($this->unused) && $this->num_options == $this->unused))):
             $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
             $this->preDiscPrefix = UPDATER_PREFIX_TEXT_STARTING_AT;
             break;
-        case ($this->attributeDisplayAtLeastPrices() && $this->num_options > $this->unused && !empty($this->unused)):
+        case ($this->attributeDisplayAtLeastPrices() && isset($this->num_options) && (!empty($this->unused) && $this->num_options > $this->unused)):
             $this->prefix = UPDATER_PREFIX_TEXT_AT_LEAST;
             $this->preDiscPrefix = UPDATER_PREFIX_TEXT_AT_LEAST;
             break;
@@ -218,7 +224,7 @@ class DPU extends base {
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
-        if ($_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
+        if (array_key_exists($key, $_SESSION['cart']->contents) && $_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
           $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, convertToFloat($_SESSION['cart']->contents[$key]['qty']));
         }
       }
@@ -326,6 +332,8 @@ class DPU extends base {
     global $db;
 //    $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
     $attributes = array();
+    $this->num_options = 0;
+    $this->unused = 0;
 
     foreach ($_POST as $key => $val) {
       if (is_array($val)) {
@@ -357,7 +365,7 @@ class DPU extends base {
       if ($process_price_attributes and $product_att_query->RecordCount() >= 1) {
         $the_options_id= 'x';
         $new_attributes = array();
-        $this->num_options = 0;
+//        $this->num_options = 0;
         while (!$product_att_query->EOF) {
 //          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement // mc12345678 17-06-13 Commented out this because attributes included in base price are controlled by attributes controller.  If a check box is not to be included, then its setting should be "off" for base_price.
             if ( $the_options_id != $product_att_query->fields['options_id']) {
@@ -390,7 +398,7 @@ class DPU extends base {
         
         $new_temp_attributes = array();
         $this->new_temp_attributes = array();
-        $this->unused = 0;
+//        $this->unused = 0;
         //  To appear in the cart, $new_temp_attributes[$options_id]
         // must contain either the selection or the lowest priced selection
         // if an "invalid" selection had been made.
@@ -442,7 +450,9 @@ class DPU extends base {
       $this->product_stock = zen_get_products_stock($_POST['products_id'], $attributes);
       
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
+      $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
+      $this->shoppingCart->contents[$products_id] = array('qty' => ((convertToFloat($cart_quantity) <= 0) ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)),
+                                                          );
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -490,7 +500,8 @@ class DPU extends base {
     } else {
       $products_id = (int)$_POST['products_id'];
       $this->product_stock = zen_get_products_stock($products_id);
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
+      $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
+      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
     }
   }
 
@@ -617,7 +628,7 @@ class DPU extends base {
 
 
 
-      if (is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
+      if (isset($this->shoppingCart->contents[$products[$i]['id']]['attributes']) && is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
 //    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
         foreach ($this->shoppingCart->contents[$products[$i]['id']]['attributes'] as $option => $value) {
           // $adjust_downloads ++; // not used? mc12345678 18-05-05
@@ -627,6 +638,8 @@ class DPU extends base {
                                     WHERE products_id = " . (int)$prid . "
                                     AND options_id = " . (int)$option . "
                                     AND options_values_id = " . (int)$value);
+
+          if ($attribute_price->EOF) continue;
 
           $data = $db->Execute("SELECT products_options_values_name
                          FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
@@ -673,7 +686,8 @@ class DPU extends base {
             }
           }
           $global_total += $total;
-          $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($_POST['cart_quantity']));
+          $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
+          $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($cart_quantity));
           if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
@@ -714,7 +728,8 @@ class DPU extends base {
       $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
     }
 
-    $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($_POST['cart_quantity']));
+    $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
+    $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($cart_quantity));
     $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->shoppingCart->total - $global_total, 0));
     array_unshift($out, sprintf(DPU_SIDEBOX_FRAME, DPU_BASE_PRICE, $total, $qty2));
 
@@ -849,6 +864,50 @@ class DPU extends base {
 
       die(json_encode($data));
     }
+  }
+  
+  // Add backwards compatibility
+  /*
+   *  Check if option name is not expected to have an option value (ie. text field, or File upload field)
+   */
+  public function zen_option_name_base_expects_no_values($option_name_id) {
+    global $db, $zco_notifier;
+
+    $option_name_no_value = true;
+    if (!is_array($option_name_id)) {
+      $option_name_id = array($option_name_id);
+    }
+
+    $sql = "SELECT products_options_type FROM " . TABLE_PRODUCTS_OPTIONS . " WHERE products_options_id :option_name_id:";
+    if (count($option_name_id) > 1 ) {
+      $sql2 = 'in (';
+      foreach($option_name_id as $option_id) {
+        $sql2 .= ':option_id:,';
+        $sql2 = $db->bindVars($sql2, ':option_id:', $option_id, 'integer');
+      }
+      $sql2 = rtrim($sql2, ','); // Need to remove the final comma off of the above.
+      $sql2 .= ')';
+    } else {
+      $sql2 = ' = :option_id:';
+      $sql2 = $db->bindVars($sql2, ':option_id:', $option_name_id[0], 'integer');
+    }
+
+    $sql = $db->bindVars($sql, ':option_name_id:', $sql2, 'noquotestring');
+
+    $sql_result = $db->Execute($sql);
+
+    foreach($sql_result as $opt_type) {
+
+      $test_var = true; // Set to false in observer if the name is not supposed to have a value associated
+      $zco_notifier->notify('FUNCTIONS_LOOKUPS_OPTION_NAME_NO_VALUES_OPT_TYPE', $opt_type, $test_var);
+
+      if ($test_var && $opt_type['products_options_type'] != PRODUCTS_OPTIONS_TYPE_TEXT && $opt_type['products_options_type'] != PRODUCTS_OPTIONS_TYPE_FILE) {
+        $option_name_no_value = false;
+        break;
+      }
+    }
+
+    return $option_name_no_value;
   }
 }
 
