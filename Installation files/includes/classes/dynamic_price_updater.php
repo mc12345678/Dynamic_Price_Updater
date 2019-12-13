@@ -106,49 +106,49 @@ class DPU extends base {
 
     switch (true) {
         //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
-        case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes) && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options) && isset($this->unused) && $this->num_options == $this->unused))):
-            $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT_STARTING_AT;
+        case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes) && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options) && isset($this->unused) && ($this->num_options == $this->unused)))):
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_STARTING_AT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_STARTING_AT);
             break;
-        case ($this->attributeDisplayAtLeastPrices() && isset($this->num_options) && (!empty($this->unused) && $this->num_options > $this->unused)):
-            $this->prefix = UPDATER_PREFIX_TEXT_AT_LEAST;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT_AT_LEAST;
+        case ($this->attributeDisplayAtLeastPrices() && isset($this->num_options) && (!empty($this->unused) && ($this->num_options > $this->unused))):
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
             break;
         case (!isset($_POST['pspClass'])):
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             break;
         case ($_POST['pspClass'] == "productSpecialPrice"):
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             break;
         case ($_POST['pspClass'] == "productSalePrice"):
-            $this->prefix = PRODUCT_PRICE_SALE;
-            $this->preDiscPrefix = PRODUCT_PRICE_SALE;
+            $this->prefix = html_entity_decode(PRODUCT_PRICE_SALE);
+            $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_SALE);
             break;
         case ($_POST['pspClass'] == "productSpecialPriceSale"):
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             break;
         case ($_POST['pspClass'] == "productPriceDiscount"):
-            $this->prefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
-            $this->preDiscPrefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
+            $this->prefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
+            $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
             break;
         case ($_POST['pspClass'] == "normalprice"):
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             break;
         case ($_POST['pspClass'] == "productFreePrice"):
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             break;
         case ($_POST['pspClass'] == "productBasePrice"):
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             break;
         default:
-            $this->prefix = UPDATER_PREFIX_TEXT;
-            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
+            $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
             // Add a notifier to allow updating this prefix if the ones above do not exist.
             $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS');
         break;
