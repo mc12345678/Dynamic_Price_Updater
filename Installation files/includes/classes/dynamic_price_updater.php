@@ -372,7 +372,7 @@ class DPU extends base {
 // add attributes that are price dependent and in or not in the page's submission
       // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
       $process_price_attributes = (defined('DPU_PROCESS_ATTRIBUTES') && DPU_PROCESS_ATTRIBUTES === 'all') ? true : $product_check_result;
-      if ($process_price_attributes and $product_att_query->RecordCount() >= 1) {
+      if ($process_price_attributes && $product_att_query->RecordCount() >= 1) {
         $the_options_id= 'x';
         $new_attributes = array();
 //        $this->num_options = 0;
