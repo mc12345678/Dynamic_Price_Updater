@@ -57,7 +57,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 // Set some global vars
 var theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
 var theForm = false;
-var theURL = "<?php echo DIR_WS_CATALOG; ?>ajax.php";
+var theURL = "<?php echo $theURL = 'ajax.php'; ?>";
 // var theURL = "<?php echo DIR_WS_CATALOG; ?>dpu_ajax.php";
 var _secondPrice = <?php echo (DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); ?>;
 var objSP = false; // please don't adjust this
@@ -147,7 +147,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
         }
       };
 
-      this.XHR.open(strMode.toLowerCase(), "<?php echo zen_decode_specialchars(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true)); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
+      this.XHR.open(strMode.toLowerCase(), theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true), strlen($theURL))); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
    
 /*                        this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);*/
       if (strMode.toLowerCase() === "post") {
@@ -157,7 +157,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
       this.XHR.send(combinedData.XML);
     } else {
       var option = {
-          url: "<?php echo zen_decode_specialchars(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true)); ?>",
+          url: theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true), strlen($theURL) + strlen(($request_type == 'SSL' ? HTTPS_SERVER . DIR_WS_HTTPS_CATALOG : HTTP_SERVER . DIR_WS_CATALOG)))); ?>",
                     data: combinedData.JSON,
                      timeout : 30000
                    };
