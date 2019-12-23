@@ -45,6 +45,11 @@ class DPU extends base {
    */
   protected $new_temp_attributes = array();
 
+  /**
+   * - query to be stored with class usable in observers with older Zen Cart versions.
+   **/
+  protected $product_attr_query;
+
   /*
    * Constructor
    *
@@ -356,8 +361,13 @@ class DPU extends base {
         $product_check_result = $product_check->fields['products_priced_by_attribute'] == '1';
       }
 
-      // do not select display only attributes and attributes_price_base_included is true
-      $product_att_query = $db->Execute("select pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type, round(concat(pa.price_prefix, pa.options_values_price), 5) as value from " . TABLE_PRODUCTS_ATTRIBUTES . " pa LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po on (po.products_options_id = pa.options_id) where products_id = " . (int)$_POST['products_id'] . " and attributes_display_only != '1' and attributes_price_base_included='1'". " order by pa.options_id, value");
+      // do not select display only attributes and do select attributes_price_base_included is true
+      $this->product_attr_query = "select pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type, round(concat(pa.price_prefix, pa.options_values_price), 5) as value from " . TABLE_PRODUCTS_ATTRIBUTES . " pa LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po on (po.products_options_id = pa.options_id) where products_id = " . (int)$_POST['products_id'] . " and attributes_display_only != '1' and attributes_price_base_included='1'". " order by pa.options_id, value";
+      
+      $query_handled = false;
+      $GLOBALS['zco_notifier']->notify('DPU_NOTIFY_INSERT_PRODUCT_QUERY', (int)$_POST['products_id'], $query_handled);
+      
+      $product_att_query = $db->Execute($this->product_attr_query);
 
 // add attributes that are price dependent and in or not in the page's submission
       // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
