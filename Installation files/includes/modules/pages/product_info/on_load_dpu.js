@@ -1,5 +1,7 @@
 try { 
   init();
 } catch(dpu_err) { 
-  console.log(dpu_err.stack);
+  if (typeof(console.log) == 'function') {
+    console.log(dpu_err.stack);
+  }
 }

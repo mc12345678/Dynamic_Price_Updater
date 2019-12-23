@@ -142,12 +142,14 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
             _this.responseText = _this.XHR.responseText;
             _this.responseHandler(resFunc, _this);
           } else {
-            console.log("Status returned - " + _this.XHR.statusText);
+            if (typeof(console.log) == 'function') {
+              console.log("Status returned - " + _this.XHR.statusText);
+            }
           }
         }
       };
 
-      this.XHR.open(strMode.toLowerCase(), theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true), strlen($theURL))); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
+      this.XHR.open(strMode.toLowerCase(), theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link($theURL, zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true, false), strlen($theURL) + strlen(($request_type == 'SSL' && defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER)))); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
    
 /*                        this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);*/
       if (strMode.toLowerCase() === "post") {
@@ -157,7 +159,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
       this.XHR.send(combinedData.XML);
     } else {
       var option = {
-          url: theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true), strlen($theURL) + strlen(($request_type == 'SSL' ? HTTPS_SERVER . DIR_WS_HTTPS_CATALOG : HTTP_SERVER . DIR_WS_CATALOG)))); ?>",
+          url: theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link($theURL, zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true, false), strlen($theURL) + strlen(($request_type == 'SSL' && defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER)))); ?>",
                     data: combinedData.JSON,
                      timeout : 30000
                    };
@@ -169,7 +171,9 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
                 try {
                     _this.responseJSON = JSON.parse(_this.responseText);
                 } catch (e) {
+                  if (typeof(console.log) == 'function') {
                      console.log(e.stack);
+                  }
                 }
             }
             _this.responseHandler(resFunc, _this);
