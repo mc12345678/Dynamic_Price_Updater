@@ -593,7 +593,7 @@ function init() {
         <?php if (!empty($optionIds)) {?>
         selectName = theForm.elements[i].getAttribute('name');
 
-        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
+        if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
           theForm.elements[i].addEventListener("change", function () {
             xhr.getPrice();
           });
@@ -604,7 +604,7 @@ function init() {
       case "text":
             selectName = theForm.elements[i].getAttribute('name');
 
-        if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].includes(selectName) || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
+        if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
           theForm.elements[i].addEventListener("input", function () {
             xhr.getPrice();
           });
@@ -620,7 +620,7 @@ function init() {
           selectName = selectName.substring(0, selectName.indexOf("]") + 1);
         }
 
-        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
+        if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
           theForm.elements[i].addEventListener("click", function () {
             xhr.getPrice();
           });
@@ -629,7 +629,7 @@ function init() {
         break;
       case "number":
         <?php if (!empty($optionIds)) {?>
-        if (["<?php echo implode('", "', $optionIds); ?>"].includes(selectName)) {
+        if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
           theForm.elements[i].addEventListener("change", function () {
             xhr.getPrice();
           });
