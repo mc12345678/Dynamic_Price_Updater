@@ -450,7 +450,7 @@ class DPU extends base {
             // if it is not already in the $attributes, then it is something that needs to be added for "removal"
             //   and by adding it, makes the software consider how many files need to be edited.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
-            $new_temp_attributes[$options_id] = $new_attributes[$options_id];
+            $new_temp_attributes[$options_id] = false; //$new_attributes[$options_id];
             $this->unused++;
           }
           /*elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
@@ -508,7 +508,7 @@ class DPU extends base {
           }
         }
 
-        if (!$blank_value) {
+        if (!$blank_value && $value !== false) {
           if (is_array($value)) {
             foreach ($value as $opt => $val) {
 //              $product_info['attributes'][$option . '_chk' . $val] = $val;
