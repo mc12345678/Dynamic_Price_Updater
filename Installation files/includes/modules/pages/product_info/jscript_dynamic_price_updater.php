@@ -57,7 +57,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 // Set some global vars
 var theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
 var theForm = false;
-var theURL = "<?php echo $theURL = 'ajax.php'; ?>";
+var theURL = "<?php echo $theURL = (defined('DPU_URL_USE') && DPU_URL_USE == 'Full' ? zen_href_link('ajax.php', '', $request_type, true, true, true) : 'ajax.php'); ?>";
 // var theURL = "<?php echo DIR_WS_CATALOG; ?>dpu_ajax.php";
 var _secondPrice = <?php echo (DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); ?>;
 var objSP = false; // please don't adjust this
