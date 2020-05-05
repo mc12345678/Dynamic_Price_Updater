@@ -173,8 +173,41 @@ class DPU extends base {
       $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
       $this->responseText['preDiscPriceTotal'] = number_format(zen_add_tax($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id'])), $decimal_places, $decimal_point, $thousands_point);
     } else {
-      $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
-      $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
+      if (defined('DISPLAY_PRICE_WITH_TAX') && (DISPLAY_PRICE_WITH_TAX !== 'true' && DISPLAY_PRICE_WITH_TAX !== 'false') && function_exists('get_products_display_price')) {
+        
+        $display_special_price = false;
+        $display_sale_price = zen_get_products_special_price((int)$_POST['products_id'], false);
+        
+        if ($display_sale_price !== false) {
+          $display_special_price = zen_get_products_special_price((int)$_POST['products_id'], true);
+        }
+        
+        $product_data = array(
+                          'prices' => array(
+                                        'normal_price' => ($display_sale_price && $display_sale_price != $display_special_price || $display_special_price) ? $this->shoppingCart->total/*_before_discounts*/ : $this->shoppingCart->total,
+                                        'special_price' => ($display_special_price && $display_sale_price == $display_special_price) ? $this->shoppingCart->total_before_discounts : false, //$this->shoppingCart->total_before_discounts,
+                                        'sale_price' => ($display_sale_price && $display_sale_price != $display_special_price) ? $this->shoppingCart->total : false, //$this->shoppingCart->total_before_discounts,
+                                      ),
+                        );
+        
+        $product_check = $db->Execute("SELECT products_tax_class_id,
+                                              " /*products_price,
+                                              products_priced_by_attribute,*/ ."
+                                              product_is_free,
+                                              product_is_call,
+                                              products_type
+                                              FROM " . TABLE_PRODUCTS . " 
+                                              WHERE products_id=" . (int)$_POST['products_id'] . " LIMIT 1");
+        
+        $product_data = array_merge($product_data, $product_check->fields);
+        
+        $this->responseText['priceTotal'] /*.*/= $this->inc_exclude_price_total($product_data) /*. ' : ' . print_r($product_data, true)*/;
+//        $this->responseText['preDiscPriceTotal'] .= 'TBD';
+        $this->responseText['preDiscPriceTotal'] .= '';/* $this->inc_exclude_price_total($product_data) . ' : ' . print_r($product_data, true);*/
+      } else {
+        $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
+        $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
+      }
     }
 
     if (!defined('DPU_OUT_OF_STOCK_IMAGE')) {
@@ -234,6 +267,217 @@ class DPU extends base {
         }
       }
     }
+  }
+
+  protected function inc_exclude_price_total($product_data = array()/*, $tax_class_id = 0, $prices = array(), $product_data = array()*/) {
+    global $currencies;
+    
+    if (DISPLAY_PRICE_WITH_TAX=='inc/ex') {
+      $inc_ex_class = 'productTaxExPrice';
+    } else if (DISPLAY_PRICE_WITH_TAX=='ex/inc') {
+      $inc_ex_class = 'productTaxPrice';
+    }
+/*
+Results sought with inc/ex:
+
+<div class="prodprice" style="display:inline-block;float:none !important;">
+    <span class="price_amount" id="productPrices">
+      <strong>Price: </strong>
+      €531.19
+      <span class="productTaxIncTag">&nbsp;Inc VAT</span><br>
+      <span class="productTaxExPrice">€439.00</span>
+      <span class="productTaxExTag">&nbsp;Ex VAT</span>
+    </span> 
+
+
+
+    <!--eof Product Name-->
+    <span class="NewExVAT"></span>
+</div>
+
+
+*/
+
+/*  Current results:
+<div class="prodprice" style="display:inline-block;float:none !important;">
+    <span class="price_amount" id="productPrices">
+      Price: €531.19
+      <span class="productTaxIncTag">&nbsp;Inc VAT</span><br>
+      <span class="productTaxExPrice">€439.00</span>
+      <span class="productTaxExTag">&nbsp;Ex VAT</span>
+      </span> 
+
+
+
+<!--eof Product Name-->
+<span class="NewExVAT"></span></div>
+*/
+
+
+    // consider discount price for comparisons.
+    $show_special_price='';
+    $show_sale_price='';
+    $free_tag = '';
+    $show_display_price = '';
+    $discount_amount = 0;
+    $display_normal_price = isset($product_data['prices']['normal_price']) ? $product_data['prices']['normal_price'] : 0;
+    $display_special_price = isset($product_data['prices']['special_price']) ? $product_data['prices']['special_price'] : 0;
+    $display_sale_price = isset($product_data['prices']['sale_price']) ? $product_data['prices']['sale_price'] : 0;
+    $tax_class_id = $product_data['products_tax_class_id'];
+    $tax_rate = zen_get_tax_rate($tax_class_id);
+
+//    $display_normal_price = $prices['normal_price']; //zen_get_products_base_price($products_id);
+//    $display_special_price = $prices['special_price']; //zen_get_products_special_price($products_id, true);
+//    $display_sale_price = $prices['sale_price']; //zen_get_products_special_price($products_id, false);
+    $discount_price = ($display_sale_price != 0 ? $display_sale_price : $display_special_price);
+    
+    if (SHOW_SALE_DISCOUNT_STATUS == '1' && ($display_special_price != 0 || $display_sale_price != 0)) {
+      if (SHOW_SALE_DISCOUNT == '1') {
+        if ($display_normal_price != 0) {
+          $discount_amount = ($display_normal_price != 0 ? (100 - (($discount_price/$display_normal_price) * 100)) : 0);
+        } else {
+          $discount_amount = $display_normal_price - $discount_price;
+        }
+      }
+    }
+
+    if ($discount_amount) {
+      if (SHOW_SALE_DISCOUNT == 1) {
+        $show_sale_discount = '<span class="productPriceDiscount">' . '<br />1' . PRODUCT_PRICE_DISCOUNT_PREFIX . number_format($discount_amount, SHOW_SALE_DISCOUNT_DECIMALS) . PRODUCT_PRICE_DISCOUNT_PERCENTAGE . '</span>';
+      } else {
+        $show_sale_discount = '<span class="productPriceDiscount">' . '<br />2' . PRODUCT_PRICE_DISCOUNT_PREFIX . display_price($discount_amount, $tax_rate) . PRODUCT_PRICE_DISCOUNT_AMOUNT . '</span>';
+      }
+    }
+    $added_text = '';
+    if ($display_special_price) {
+//      $added_text .= ' in display special price ';
+      $show_sale_price='';
+      $show_normal_price = '<span class="normalprice">3'.display_price($display_normal_price, $tax_rate).' ';
+      $show_price_inc_ex_tax = '<br />'.'<span class="'.$inc_ex_class.'">4'.display_price_inc_ex_tax($display_special_price, $tax_rate).'</span>'; // !!! AGM
+      if ($display_sale_price && $display_sale_price != $display_special_price) {
+        $show_special_price = '&nbsp;'.'<span class="productSpecialPriceSale">5'.display_price($display_special_price, $tax_rate).'</span>';
+        if ($product_data['product_is_free']=='1') {
+          $show_sale_price = '<br />66'.'<span class="productSalePrice">6'.PRODUCT_PRICE_SALE.'<s>'.display_price($display_sale_price, $tax_rate).'</s>'.'</span>';
+        } else {
+          $show_sale_price = '<br />'.'<span class="productSalePrice">7'.PRODUCT_PRICE_SALE.display_price($display_sale_price, $tax_rate).'</span>';
+        }
+      } else {
+        $show_special_price =  '<br />' . ($product_data['product_is_free'] == '1' ? 'true' : 'false');
+        $show_special_price .= '<span class="productSpecialPrice">8';
+        if ($product_data['product_is_free'] == '1') {
+          $show_special_price .= '9<s>';
+        }
+        $show_special_price .= display_price($display_special_price, $tax_rate);
+        if ($product_data['product_is_free'] == '1') {
+          $show_special_price .= '</s>';
+        }
+        $show_special_price .= '</span>';
+      }
+    } else {
+//      $added_text .= ' in NOT display special price ';
+      $show_special_price='';
+      if ($display_sale_price) {
+//      $added_text .= ' in display sale price ';
+        $show_normal_price = '<span class="normalprice">10'.display_price($display_normal_price, $tax_rate).' </span>';
+        $show_sale_price = '<br />'.'<span class="productSalePrice">11'.PRODUCT_PRICE_SALE.display_price($display_sale_price, $tax_rate).'</span>';
+        $display_price = $display_sale_price;
+	    } else {
+//      $added_text .= ' in NOT display sale price ';
+        $show_sale_price='';
+        
+        if ($product_data['product_is_free'] == '1') {
+         $show_normal_price .= '<s>';
+        }
+        
+    $show_normal_price = display_price($display_normal_price, $tax_rate);
+        
+        if ($product_check->fields['product_is_free'] == '1') {
+          $show_normal_price .='</s>';
+        }
+        $display_price = $display_normal_price;
+//    $tax_rate = 0;
+      }
+//    if (DISPLAY_PRICE_WITH_TAX=='inc/ex') {
+//      $tax_rate = zen_get_tax_rate($tax_class_id);
+//    }
+    }
+    $show_price_inc_ex_tax = '<br />'.'<span class="'.$inc_ex_class.'">' . display_price_inc_ex_tax($display_price, $tax_rate) . '</span>';
+
+
+
+
+    $final_display_price = '';
+    $final_display_price_inc_ex_tax = '';
+    $final_display_ex_tag = '';
+    $final_display_inc_tag = '';
+    
+    if ($tax_rate == 0) {
+      $final_display_price = $show_normal_price.' '.PRICE_ZERO_TAX_TEXT;
+    } else if ($display_normal_price != 0) { // don't show the $0.00
+      $final_display_price=$show_normal_price;
+      $final_display_price_inc_ex_tax=$show_price_inc_ex_tax;
+      $final_display_ex_tag='<span class="productTaxExTag">&nbsp;'.PRICE_EX_TAX_TEXT.'</span>';
+      $final_display_inc_tag='<span class="productTaxIncTag">&nbsp;'.PRICE_INC_TAX_TEXT.'</span>';
+    }
+    
+    $extra_inner_text = '';
+    $extra_outer_text = '';
+    
+    switch (DISPLAY_PRICE_WITH_TAX) {
+      case 'ex/inc':
+        $extra_inner_text = $final_display_ex_tag;
+        $extra_outer_text = $final_display_inc_tag;
+      break;
+      
+      case 'inc/ex':
+        $extra_inner_text = $final_display_inc_tag;
+        $extra_outer_text = $final_display_ex_tag;
+      break;
+      
+      default:
+        check_inc_ex_status();
+        $final_display_price_inc_ex_tax = '';
+        if(isset($_SESSION["inc_ex_tax"])) {
+          $extra_inner_text = $final_display_ex_tag;
+        
+          if ($_SESSION["inc_ex_tax"]) {
+            $extra_inner_text = $final_display_inc_tag;
+          }
+        }
+      break;
+    }
+    
+    $final_display_price = $final_display_price . $show_special_price . $show_sale_price . $extra_inner_text . $show_sale_discount . $final_display_price_inc_ex_tax . $extra_outer_text;
+    
+    // If Free, Show it
+    if ($product_data['product_is_free'] == '1') {
+      $free_tag = '<br />';
+      if (OTHER_IMAGE_PRICE_IS_FREE_ON == '0') {
+        $free_tag .= PRODUCTS_PRICE_IS_FREE_TEXT . ' yup free';
+      } else {
+        $free_tag .= zen_image(DIR_WS_TEMPLATE_IMAGES . OTHER_IMAGE_PRICE_IS_FREE, PRODUCTS_PRICE_IS_FREE_TEXT);
+      }
+    }
+    
+    // If Call for Price, Show it
+    if ($product_data['product_is_call']) {
+      $call_tag = '<br />';
+      if (PRODUCTS_PRICE_IS_CALL_IMAGE_ON == '0') {
+        $call_tag .= PRODUCTS_PRICE_IS_CALL_FOR_PRICE_TEXT;
+      } else {
+        $call_tag .= zen_image(DIR_WS_TEMPLATE_IMAGES . OTHER_IMAGE_CALL_FOR_PRICE, PRODUCTS_PRICE_IS_CALL_FOR_PRICE_TEXT);
+      }
+    }
+
+    return $final_display_price.$free_tag.$call_tag . '</span>:'.$added_text;
+
+
+
+
+    $result = $inc_ex_class;
+    $result = $show_price_inc_ex_tax;
+    
+    return $result;
   }
 
   /*
