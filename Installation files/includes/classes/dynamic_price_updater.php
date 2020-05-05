@@ -154,6 +154,7 @@ class DPU extends base {
         break;
     }
     $this->responseText['priceTotal'] = $this->prefix;
+    $this->responseText['priceTotalTaxed'] = $this->prefix;
     $this->responseText['preDiscPriceTotalText'] = $this->preDiscPrefix;
     
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = " . (int)$_POST['products_id'] . " LIMIT 1");
@@ -171,6 +172,8 @@ class DPU extends base {
        *   decimal point and thousands group separater, respectively.
       */
       $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
+//      $this->responseText['priceTotalTaxed'] .= 
+      $this->responseText['midDiscPriceTotal'] = number_format(zen_add_tax($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id'])), $decimal_places, $decimal_point, $thousands_point);
       $this->responseText['preDiscPriceTotal'] = number_format(zen_add_tax($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id'])), $decimal_places, $decimal_point, $thousands_point);
     } else {
       if (defined('DISPLAY_PRICE_WITH_TAX') && (DISPLAY_PRICE_WITH_TAX !== 'true' && DISPLAY_PRICE_WITH_TAX !== 'false') && function_exists('get_products_display_price')) {
@@ -203,9 +206,13 @@ class DPU extends base {
         
         $this->responseText['priceTotal'] /*.*/= $this->inc_exclude_price_total($product_data) /*. ' : ' . print_r($product_data, true)*/;
 //        $this->responseText['preDiscPriceTotal'] .= 'TBD';
+//        $this->responseText['priceTotalTaxed'] .= '';/* $this->inc_exclude_price_total($product_data) . ' : ' . print_r($product_data, true);*/
+//        $this->responseText['midDiscPriceTotal'] .= '';/* $this->inc_exclude_price_total($product_data) . ' : ' . print_r($product_data, true);*/
         $this->responseText['preDiscPriceTotal'] .= '';/* $this->inc_exclude_price_total($product_data) . ' : ' . print_r($product_data, true);*/
       } else {
         $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
+        $this->responseText['priceTotalTaxed'] .= $currencies->display_price($this->shoppingCart->total, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
+        $this->responseText['midDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id'])); // Need to determine if/how price should be adjusted associated with multiple price discounts.
         $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
       }
     }
@@ -254,6 +261,7 @@ class DPU extends base {
         $this->responseText['stock_quantity'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
       } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
         $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];;
+        $this->responseText['priceTotalTaxed'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
         $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];;
       }
     }
