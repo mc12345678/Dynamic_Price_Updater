@@ -235,7 +235,7 @@ class DPU extends base {
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
-        if (array_key_exists($key, $_SESSION['cart']->contents) && $_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
+        if ((isset($_SESSION['cart']->contents[$key]) || array_key_exists($key, $_SESSION['cart']->contents)) && $_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
           $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, convertToFloat($_SESSION['cart']->contents[$key]['qty']));
         }
       }
@@ -252,7 +252,7 @@ class DPU extends base {
       // If there were attributes that were added to support calculating
       //   the further additional minimum price.  Removing it will restore
       //   the cart to the data collected directly from the page.
-      if (array_key_exists($products_id, $this->new_attributes) && is_array($this->new_attributes[$products_id])) {
+      if ((isset($this->new_attributes[$products_id]) || array_key_exists($products_id, $this->new_attributes)) && is_array($this->new_attributes[$products_id])) {
 
         foreach ($this->new_attributes[$products_id] as $option => $value) {
           //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -388,7 +388,7 @@ class DPU extends base {
               $the_options_id = $product_att_query->fields['options_id'];
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
               $this->num_options++;
-            } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $product_att_query->fields['options_values_id']) {
+            } elseif ((isset($attributes[$the_options_id]) || array_key_exists($the_options_id, $attributes)) && $attributes[$the_options_id] == $product_att_query->fields['options_values_id']) {
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
             }
 //          }
@@ -443,16 +443,16 @@ class DPU extends base {
           
           $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DISPLAY_ONLY');
 
-          if (array_key_exists($options_id, $attributes) && !$this->display_only_value) {
+          if ((isset($attributes[$options_id]) || array_key_exists($options_id, $attributes)) && !$this->display_only_value) {
             // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
-          } elseif (array_key_exists($options_id, $attributes) && $this->display_only_value) {
+          } elseif ((isset($attributes[$options_id]) || array_key_exists($options_id, $attributes)) && $this->display_only_value) {
             // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
             //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $this->unused++;
-          } elseif (array_key_exists($options_id, $new_attributes)) {
+          } elseif (isset($new_attributes[$options_id]) || array_key_exists($options_id, $new_attributes)) {
             // if it is not already in the $attributes, then it is something that needs to be added for "removal"
             //   and by adding it, makes the software consider how many files need to be edited.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
