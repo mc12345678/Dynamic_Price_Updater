@@ -225,9 +225,9 @@ class DPU extends base {
       } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
         $this->responseText['stock_quantity'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
       } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
-        $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];;
+        $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
         $this->responseText['priceTotalTaxed'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
-        $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];;
+        $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
       }
     }
 
