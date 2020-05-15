@@ -149,7 +149,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
         }
       };
 
-      this.XHR.open(strMode.toLowerCase(), theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link($theURL, zen_get_all_get_params(array('action','pid')) . (!empty($_GET['main_page']) && zen_not_null($_GET['main_page']) ? 'main_page=' . zen_output_string_protected($_GET['main_page']) . '&' : '') . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true, false), strlen($theURL) + strlen(($request_type == 'SSL' && defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER)))); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
+      this.XHR.open(strMode.toLowerCase(), theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link($theURL, 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true, false), strlen($theURL) + strlen(($request_type == 'SSL' && defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER)))); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
    
 /*                        this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);*/
       if (strMode.toLowerCase() === "post") {
@@ -159,7 +159,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
       this.XHR.send(combinedData.XML);
     } else {
       var option = {
-          url: theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link($theURL, zen_get_all_get_params(array('action','pid')) . (!empty($_GET['main_page']) && zen_not_null($_GET['main_page']) ? 'main_page=' . zen_output_string_protected($_GET['main_page']) . '&' : '') . 'product_info&act=DPU_Ajax&method=dpu_update', $request_type, true, true, true, false), strlen($theURL) + strlen(($request_type == 'SSL' && defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER)))); ?>",
+          url: theURL + "<?php echo zen_decode_specialchars(substr(zen_href_link($theURL, 'product_info&act=DPU_Ajax&method=dpu_update', $request_type, true, true, true, false), strlen($theURL) + strlen(($request_type == 'SSL' && defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER)))); ?>",
                     data: combinedData.JSON,
                      timeout : 30000
                    };
