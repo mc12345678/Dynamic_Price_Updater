@@ -768,6 +768,10 @@ class DPU extends base {
   function setCurrentPage() {
     global $db, $request_type;
 
+    if (empty($_GET['products_id'])) {
+      $_GET['products_id'] = !empty($_POST['products_id']) ? $_POST['products_id'] : 0;
+    }
+
     if (isset($_SESSION['customer_id']) && $_SESSION['customer_id']) {
       $wo_customer_id = $_SESSION['customer_id'];
 
