@@ -111,7 +111,7 @@ if (is_dir($module_installer_directory)) {
 
 
 // Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
-if (constant($module_constant . '_PLUGIN_CHECK') && !function_exists('this_plugin_version_check_for_updates')) {
+if (constant($module_constant . '_PLUGIN_CHECK') != 'false' && !function_exists('this_plugin_version_check_for_updates')) {
     function this_plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
     {
         if ($plugin_file_id == 0) return false;
@@ -181,7 +181,7 @@ if (constant($module_constant . '_PLUGIN_CHECK') && !function_exists('this_plugi
 
 // Version Checking
 // Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
-if ($zencart_com_plugin_id != 0 && isset($_GET['gID']) && $_GET['gID'] == $configuration_group_id && (!defined($module_constant . '_PLUGIN_CHECK') || constant($module_constant . '_PLUGIN_CHECK'))) {
+if ($zencart_com_plugin_id != 0 && isset($_GET['gID']) && $_GET['gID'] == $configuration_group_id && (!defined($module_constant . '_PLUGIN_CHECK') || constant($module_constant . '_PLUGIN_CHECK') != 'false')) {
     $new_version_details = this_plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
     if ($new_version_details != false) {
         $messageStack->add("Version ".$new_version_details['latest_plugin_version']." of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
